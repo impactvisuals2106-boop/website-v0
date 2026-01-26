@@ -58,3 +58,4 @@ Required environment variables (add in Vercel dashboard):
 - `NEXT_PUBLIC_SUPABASE_URL` - Your Supabase project URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Your Supabase anon key
 
+"# website-v0" 
