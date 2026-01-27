@@ -3,9 +3,10 @@ const nextConfig = {
   reactStrictMode: true,
   images: {
     domains: [],
+    remotePatterns: [],
   },
-  // Ensure proper routing for Vercel
-  output: 'standalone',
+  // Vercel automatically handles Next.js output
+  // No need for 'standalone' output mode
 }
 
 module.exports = nextConfig
