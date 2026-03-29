@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
       console.log('Email server is ready to send messages')
     } catch (verifyError) {
       console.error('Email server verification failed:', verifyError)
-      throw new Error('Email server configuration is invalid')
+      throw verifyError
     }
 
     // Email content
