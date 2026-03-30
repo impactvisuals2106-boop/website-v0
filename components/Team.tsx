@@ -3,10 +3,10 @@
 import { useEffect, useRef } from 'react'
 
 const teamMembers = [
-  { name: 'Veera Babu', role: 'Founder', image: 'iv Website/assets/veera.jpeg', hasImage: true },
+  { name: 'Veera Babu', role: 'Founder', image: '/iv Website/assets/veera.jpeg', hasImage: true },
   { name: 'Thanmai', role: 'Marketing Lead', image: '/assets/Thanmai.jpeg', hasImage: true },
   { name: 'Vitesh', role: 'Co-Founder', image: '/assets/vitesh.jpeg', hasImage: true },
-  { name: 'Vaseem', role: 'Dop Lead', image: 'iv Website/assets/vaseem.jpeg', hasImage: false },
+  { name: 'Vaseem', role: 'Dop Lead', image: '/iv Website/assets/vaseem.jpeg', hasImage: false },
   { name: 'Agasthya', role: 'Editing Lead', image: '/assets/Agasthya.jpeg', hasImage: true },
   { name: 'Akshitha', role: 'Designing Lead', image: '/assets/akshitha.jpg', hasImage: true },
   { name: 'Kowshik', role: 'Manager', image: '/assets/kowshik.jpeg', hasImage: true },
