@@ -106,15 +106,7 @@ export default function Header() {
                 Packages
               </a>
             </li>
-            <li>
-              <a
-                href="#team"
-                className={activeSection === 'team' ? 'active' : ''}
-                onClick={(e) => handleLinkClick(e, '#team')}
-              >
-                Team
-              </a>
-            </li>
+
             <div className="nav-active-line" style={navLineStyle}></div>
           </ul>
         </nav>
