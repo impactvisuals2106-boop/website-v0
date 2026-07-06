@@ -83,6 +83,7 @@ export default function Contact() {
                 placeholder="Your Name"
                 value={formData.name}
                 onChange={handleChange}
+                disabled={isLoading}
                 required
               />
             </div>
@@ -93,6 +94,7 @@ export default function Contact() {
                 placeholder="Your Email"
                 value={formData.email}
                 onChange={handleChange}
+                disabled={isLoading}
                 required
               />
             </div>
@@ -103,6 +105,7 @@ export default function Contact() {
                 placeholder="Contact Number"
                 value={formData.phone}
                 onChange={handleChange}
+                disabled={isLoading}
               />
             </div>
             <div className="form-group">
@@ -112,6 +115,7 @@ export default function Contact() {
                 placeholder="Tell us about your Business"
                 value={formData.message}
                 onChange={handleChange}
+                disabled={isLoading}
                 required
               ></textarea>
             </div>

@@ -13,11 +13,18 @@ function sanitizeHtml(text: string): string {
 
 export async function POST(request: NextRequest) {
   try {
-    // Check if email is configured
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
-      console.error('Email configuration missing')
+    const host = process.env.SMTP_HOST || 'smtp.gmail.com'
+    const port = parseInt(process.env.SMTP_PORT || '465')
+    const secure = process.env.SMTP_SECURE !== 'false'
+    const user = process.env.SMTP_USER?.trim()
+    const pass = process.env.SMTP_PASS?.trim()
+    const receiver = process.env.CONTACT_RECEIVER?.trim() || 'impactvisuals21@gmail.com'
+
+    // Prevent crashes if SMTP credentials are missing
+    if (!user || !pass) {
+      console.error('SMTP credentials (SMTP_USER/SMTP_PASS) are missing from configuration variables.')
       return NextResponse.json(
-        { error: 'Email service not configured' },
+        { error: 'Service temporarily unavailable. Please try again later.' },
         { status: 500 }
       )
     }
@@ -25,19 +32,34 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { name, email, phone, message } = body
 
-    // Validate required fields
-    if (!name || !email || !message) {
+    // Server-side validation
+    if (!name || typeof name !== 'string' || name.trim() === '') {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Name is required' },
         { status: 400 }
       )
     }
 
-    // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
+    if (!email || typeof email !== 'string' || !emailRegex.test(email.trim())) {
       return NextResponse.json(
-        { error: 'Invalid email address' },
+        { error: 'A valid email address is required' },
+        { status: 400 }
+      )
+    }
+
+    if (phone !== undefined && phone !== null && phone !== '') {
+      if (typeof phone !== 'string' || phone.trim().length > 30) {
+        return NextResponse.json(
+          { error: 'Phone number is invalid' },
+          { status: 400 }
+        )
+      }
+    }
+
+    if (!message || typeof message !== 'string' || message.trim() === '') {
+      return NextResponse.json(
+        { error: 'Message is required' },
         { status: 400 }
       )
     }
@@ -48,48 +70,48 @@ export async function POST(request: NextRequest) {
     const sanitizedPhone = phone ? sanitizeHtml(phone.trim()) : 'Not provided'
     const sanitizedMessage = sanitizeHtml(message.trim())
 
-    // Create transporter using Gmail SMTP
-    // You'll need to set up environment variables for this
+    // Create transporter using configured SMTP settings
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host,
+      port,
+      secure,
       auth: {
-        user: process.env.EMAIL_USER?.trim(), // Your Gmail address
-        pass: process.env.EMAIL_PASSWORD?.trim(), // Your Gmail App Password (remove any spaces)
+        user,
+        pass,
       },
     })
 
-    // Verify transporter configuration
+    // Verify transporter configuration connection
     try {
       await transporter.verify()
-      console.log('Email server is ready to send messages')
+      console.log('SMTP connection verified successfully.')
     } catch (verifyError) {
-      console.error('Email server verification failed:', verifyError)
-      throw verifyError
+      console.error('SMTP connection verification failed:', verifyError)
+      return NextResponse.json(
+        { error: 'Unable to connect to the email server. Please try again later.' },
+        { status: 500 }
+      )
     }
 
-    // Email content
+    // Email content options
     const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: 'impactvisuals2106@gmail.com',
-      subject: `New Contact Form Submission from ${sanitizedName}`,
+      from: `"${sanitizedName}" <${user}>`,
+      to: receiver,
+      replyTo: sanitizedEmail,
+      subject: 'New Contact Form Submission',
+      text: `New Contact Form Submission\n\nName: ${sanitizedName}\nEmail: ${sanitizedEmail}\nPhone: ${sanitizedPhone}\nMessage: ${sanitizedMessage}`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #0070f3;">New Contact Form Submission</h2>
-          <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; line-height: 1.6;">
+          <h2 style="color: #0070f3; border-bottom: 2px solid #0070f3; padding-bottom: 5px;">New Contact Form Submission</h2>
+          <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #eee;">
             <p><strong>Name:</strong> ${sanitizedName}</p>
             <p><strong>Email:</strong> ${sanitizedEmail}</p>
             <p><strong>Phone:</strong> ${sanitizedPhone}</p>
             <p><strong>Message:</strong></p>
-            <p style="background: white; padding: 15px; border-radius: 4px; margin-top: 10px; white-space: pre-wrap;">
-              ${sanitizedMessage.replace(/\n/g, '<br>')}
-            </p>
+            <p style="background: white; padding: 15px; border-radius: 4px; border: 1px solid #ddd; white-space: pre-wrap;">${sanitizedMessage}</p>
           </div>
-          <p style="color: #666; font-size: 12px;">
-            This email was sent from the Impact Visuals website contact form.
-          </p>
         </div>
       `,
-      replyTo: email, // Allow replying directly to the sender
     }
 
     // Send email
@@ -104,18 +126,16 @@ export async function POST(request: NextRequest) {
           {
             name: sanitizedName,
             email: sanitizedEmail,
-            phone: sanitizedPhone !== 'Not provided' ? sanitizedPhone : null,
+            phone: phone ? sanitizedPhone : null,
             message: sanitizedMessage,
           },
         ])
 
       if (dbError) {
         console.error('Error saving to database:', dbError)
-        // Don't fail the request if DB save fails, email was sent successfully
       }
     } catch (dbErr) {
       console.error('Database save error:', dbErr)
-      // Continue - email was sent successfully
     }
 
     return NextResponse.json(
@@ -123,22 +143,9 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     )
   } catch (error: any) {
-    console.error('Error sending email:', error)
-    
-    // Provide more detailed error messages
-    let errorMessage = 'Failed to send email'
-    if (error.code === 'EAUTH') {
-      errorMessage = 'Authentication failed. Please check your Gmail App Password.'
-    } else if (error.code === 'ECONNECTION') {
-      errorMessage = 'Connection failed. Please check your internet connection.'
-    } else if (error.response) {
-      errorMessage = `Email service error: ${error.response}`
-    } else if (error.message) {
-      errorMessage = `Error: ${error.message}`
-    }
-    
+    console.error('Error in route execution:', error)
     return NextResponse.json(
-      { error: errorMessage },
+      { error: 'An unexpected error occurred while sending your message. Please try again.' },
       { status: 500 }
     )
   }
