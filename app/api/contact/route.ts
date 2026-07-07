@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     const secure = process.env.SMTP_SECURE !== 'false'
     const user = process.env.SMTP_USER?.trim() || process.env.EMAIL_USER?.trim()
     const pass = process.env.SMTP_PASS?.trim() || process.env.EMAIL_PASSWORD?.trim()
-    const receiver = process.env.CONTACT_RECEIVER?.trim() || 'impactvisuals21@gmail.com'
+    const receiver = process.env.CONTACT_RECEIVER?.trim() || 'impactvisuals2106@gmail.com'
 
     const body = await request.json()
     const { name, email, phone, message } = body
