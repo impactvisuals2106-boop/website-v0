@@ -158,7 +158,7 @@ export default function Contact() {
           <div className="contact-info">
             <div className="info-item">
               <i className="fas fa-envelope" style={{ color: 'var(--accent-primary)' }}></i>
-              <a href="mailto:impactvisuals2106@gmail.com">impactvisuals21@gmail.com</a>
+              <a href="mailto:impactvisuals2106@gmail.com">impactvisuals2106@gmail.com</a>
             </div>
             <div className="info-item">
               <i className="fab fa-whatsapp" style={{ color: '#25D366' }}></i>
